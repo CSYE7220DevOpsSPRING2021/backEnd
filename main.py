@@ -83,9 +83,72 @@ def insertBusToDB(bus):
     Uber_bus.insert_one(bus)
     return bus
 
-def getBusLists(StartTime,EndTime,Depart,Arrive):
+def getBusLists(StartTime,EndTime,Depart,Arrive,Number):
     # return None
-    return list(Uber_bus.find({"Depart":Depart,"Arrive":Arrive,"Departtime":{"$gte":StartTime,"$lte":EndTime}}))
+    print(Number)
+    return list(Uber_bus.find({"Depart":Depart,"Arrive":Arrive,"Departtime":{"$gte":StartTime,"$lte":EndTime},"Number":{"$gte":Number}}))
+#### simple transaction!
+def bookingProcess(busID,user,Number,contactinfo,status):
+    mongosession=mongo_client.start_session()
+    mongosession.start_transaction()
+    try:
+        if status=="confirmed":
+            bus=Uber_bus.find_one({"_id":busID})
+            if bus is None or int(bus["Number"])<Number:
+                raise "No bus found"
+            bus["Number"]=int(bus["Number"])-Number
+            Uber_bus.update_one({"_id" : bus['_id']},
+                {"$set": bus},
+                upsert=True)
+        else:
+            bus=busID
+            insertBusToDB(bus)       
+        # print(bus)            
+        bd=dict(_id=str(ObjectId()),user_id=user["_id"],Number=Number,contactinfo=contactinfo,busID=bus["_id"],status=status)
+        Uber_booking.insert_one(bd)
+        mongosession.commit_transaction()
+        return jsonify(""),201
+    except Exception as e:
+        print(e)
+        mongosession.abort_transaction()
+        return jsonify("Bus didnt have enough seats"),400
+    finally:
+        mongosession.end_session()
+def deletebookingprocess(bookingID):
+    mongosession=mongo_client.start_session()
+    mongosession.start_transaction()
+    try:
+        booking=Uber_booking.find_one({"_id":bookingID})
+        if booking["status"]!="confirmed":
+            raise "process error"
+        bus=Uber_bus.find_one({"_id":booking["busID"]})
+        bus["Number"]+=int(booking["Number"])
+        if bus["BusType"]=="shared":
+            Uber_bus.update_one({"_id" : bus['_id']},
+                {"$set": bus},
+                upsert=True)
+        else:
+            Uber_bus.delete_one({"_id" : bus['_id']})
+        Uber_booking.delete_one({"_id":bookingID})
+        mongosession.commit_transaction()
+        return jsonify("successfully delete"),200
+    except Exception as e:
+        print(e)
+        mongosession.abort_transaction()
+        return jsonify("internal error"),500
+    finally:
+        mongosession.end_session()
+def getBookingList(user):
+    print(user)
+    confirmed=list(Uber_booking.find({"user_id":user["_id"],"status":"confirmed"}))
+    unconfirmed=list(Uber_booking.find({"user_id":user["_id"],"status":"unconfirmed"}))
+    return jsonify(dict(confirmed=confirmed,unconfirmed=unconfirmed))
+def confirmBookingList(bookingID):
+    booking=Uber_booking.find_one({"_id":bookingID})
+    booking["status"]="confirmed"
+    Uber_booking.update_one({"_id" : bookingID},
+                {"$set": booking},
+                upsert=True)
 # route
 ## docs
 @app.route('/doc',methods=['GET'])
@@ -97,8 +160,10 @@ def doc():
         http://apiurl/user/refresh<BR />
         http://apiurl/user/bus/insertbus<BR />
         http://apiurl/user/bus/searchbus<BR />
+        http://apiurl//booking/bookingexist<BR />
         GET:<BR/>
         http://apiurl/user/getuser<BR />
+        http://apiurl/booking/getlist<BR />
     """
 ## user
 ### sign in/login
@@ -138,11 +203,9 @@ def insertBus():
         return jsonify("error access"),401
     json=request.json
     try:
-        bus=dict(Departtime=datetime.strptime(json["Departtime"],"%Y/%m/%d %H:%M"),Number=json["Number"],Depart=json["Depart"],Arrive=json["Arrive"],_id=str(ObjectId()),BusType=json["BusType"])
-
-        int(bus["Number"])
+        bus=dict(Departtime=datetime.strptime(json["Departtime"],"%Y/%m/%d %H:%M"),Number=int(json["Number"]),Depart=json["Depart"],Arrive=json["Arrive"],_id=str(ObjectId()),BusType=json["BusType"])
         for key in bus:
-            if key=="Departtime":
+            if key=="Departtime" or key=="Number":
                 continue
             if len(bus[key]) == 0:
                 return jsonify("error input1"),400
@@ -166,13 +229,77 @@ def searchbus():
             EndTime=StartTime+timedelta(days=1)
         Depart=request.json["Depart"]
         Arrive=request.json["Arrive"]
+        try:
+            Number=int(request.json["Number"])
+        except:
+            Number=0
     except Exception as e:
         print(e)
         return jsonify("error"),400
     # return jsonify(data=dict(StartTime=StartTime,EndTime=EndTime,Depart=Depart,Arrive=Arrive))
-    busList=getBusLists(StartTime,EndTime,Depart,Arrive)
+    busList=getBusLists(StartTime,EndTime,Depart,Arrive,Number)
     return jsonify(data=busList)
-
+@app.route('/booking/bookingexist',methods=["POST"])
+@jwt_required(fresh=True)
+def bookingExistBus():
+    busID=request.json["busID"]
+    user=dict(current_user)
+    Number=request.json["Number"]
+    contactinfo=request.json["contactinfo"]
+    status="confirmed"
+    if busID is None or Number is None or contactinfo is None or contactinfo["name"] is None or contactinfo["phone"] is None:
+        return jsonify("error input"),400
+    try:
+        Number=int(Number)
+    except:
+        return jsonify("error input"),400
+    return bookingProcess(busID,user,Number,contactinfo,status)
+@app.route('/booking/deletebooking',methods=["DELETE"])
+@jwt_required(fresh=True)
+def deleteBooking():
+    bookingID=request.json["bookingID"]
+    return deletebookingprocess(bookingID)
+@app.route('/booking/getlist',methods=["GET"])
+@jwt_required(fresh=True)
+def getBookings():
+    user=dict(current_user)
+    return getBookingList(user)
+@app.route('/booking/confirm',methods=["PUT"])
+@jwt_required(fresh=True)
+def confirmBooking():
+    user=dict(current_user)
+    if(user["userType"]!="admin"):
+        return jsonify(),401
+    bookingID=request.json["bookingID"]
+    if bookingID is None:
+        return jsonify(),400
+    confirmBookingProcess(bookingID)
+    return jsonify(),204
+@app.route('/booking/createbooking',methods=["POST"])
+@jwt_required(fresh=True)
+def createBooking():
+    user=dict(current_user)
+    Number=request.json["Number"]
+    contactinfo=request.json["contactinfo"]
+    json=request.json
+    try:
+        bus=dict(Departtime=datetime.strptime(json["Departtime"],"%Y/%m/%d %H:%M"),Number=int(json["Number"]),Depart=json["Depart"],Arrive=json["Arrive"],_id=str(ObjectId()),BusType="private")
+        for key in bus:
+            if key=="Departtime" or key=="Number":
+                continue
+            if len(bus[key]) == 0:
+                return jsonify("error input1"),400
+        
+        bus=getEstimateTime(bus)
+    except:
+        return jsonify("error input"),400
+    if Number is None or contactinfo is None or contactinfo["name"] is None or contactinfo["phone"] is None:
+        return jsonify("error input"),400
+    try:
+        Number=int(Number)
+    except:
+        return jsonify("error input"),400
+    return bookingProcess(bus,user,Number,contactinfo)
 
 
 # interceptor
@@ -183,7 +310,7 @@ def check_value(json):
             value=check_value(json[key])
             if value:
                 return value
-        if re.match("[`~!@#$^&*()=|{}':;',\\[\\].<>《》/?~！@#￥……&*（）——|{}【】‘；：”“'。，、？ ]",json[key]):
+        elif re.match("[`~!@#$^&*()=|{}':;',\\[\\].<>《》/?~！@#￥……&*（）——|{}【】‘；：”“'。，、？ ]",json[key]):
             return True
 @app.before_request
 def interceptor():
