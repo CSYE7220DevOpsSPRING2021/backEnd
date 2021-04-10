@@ -27,7 +27,7 @@ import bcrypt
 ip="localhost:27017"
 if os.getenv("mongoDBip")!=None:
     ip=os.environ.get("mongoDBip",None)
-# print(ip)
+# # print(ip)
 mongo_client = MongoClient(ip)
 db = mongo_client['Uber']
 Uber_bus = db['Uber']
@@ -62,17 +62,17 @@ def getUser(username):
     del user["password"]
     return user
 def createUser(username,password):
-    # print(Uber_user.find_one({"userName":username}))
+    # # print(Uber_user.find_one({"userName":username}))
     if Uber_user.find_one({"userName":username}) is not None:
-        print(Uber_user.find_one({"userName":username}))
+        # print(Uber_user.find_one({"userName":username}))
         return None
     try:   
-        print(username,password)     
+        # print(username,password)     
         user=dict(userName=username,password=str(bcrypt.hashpw(password.encode(),salt)),_id=str(ObjectId()),userType="normal")        
         Uber_user.insert_one(user)
         return user
     except Exception as e:
-        print(e)
+        # print(e)
         return None
 def getEstimateTime(bus):
     bus["EstimateTime"]="3h"
@@ -85,7 +85,7 @@ def insertBusToDB(bus):
 
 def getBusLists(StartTime,EndTime,Depart,Arrive,Number):
     # return None
-    print(Number)
+    # print(Number)
     return list(Uber_bus.find({"Depart":Depart,"Arrive":Arrive,"Departtime":{"$gte":StartTime,"$lte":EndTime},"Number":{"$gte":Number}}))
 #### simple transaction!
 def bookingProcess(busID,user,Number,contactinfo,status):
@@ -103,13 +103,13 @@ def bookingProcess(busID,user,Number,contactinfo,status):
         else:
             bus=busID
             insertBusToDB(bus)       
-        # print(bus)            
+        # # print(bus)            
         bd=dict(_id=str(ObjectId()),user_id=user["_id"],Number=Number,contactinfo=contactinfo,busID=bus["_id"],status=status)
         Uber_booking.insert_one(bd)
         mongosession.commit_transaction()
         return jsonify(""),201
     except Exception as e:
-        print(e)
+        # print(e)
         mongosession.abort_transaction()
         return jsonify("Bus didnt have enough seats"),400
     finally:
@@ -119,8 +119,8 @@ def deletebookingprocess(bookingID):
     mongosession.start_transaction()
     try:
         booking=Uber_booking.find_one({"_id":bookingID})
-        if booking["status"]!="confirmed":
-            raise "process error"
+        # if booking["status"]!="confirmed":
+        #     raise "process error"
         bus=Uber_bus.find_one({"_id":booking["busID"]})
         bus["Number"]+=int(booking["Number"])
         if bus["BusType"]=="shared":
@@ -133,17 +133,17 @@ def deletebookingprocess(bookingID):
         mongosession.commit_transaction()
         return jsonify("successfully delete"),200
     except Exception as e:
-        print(e)
+        # print(e)
         mongosession.abort_transaction()
         return jsonify("internal error"),500
     finally:
         mongosession.end_session()
 def getBookingList(user):
-    print(user)
+    # print(user)
     confirmed=list(Uber_booking.find({"user_id":user["_id"],"status":"confirmed"}))
     unconfirmed=list(Uber_booking.find({"user_id":user["_id"],"status":"unconfirmed"}))
     return jsonify(dict(confirmed=confirmed,unconfirmed=unconfirmed))
-def confirmBookingList(bookingID):
+def confirmBookingProcess(bookingID):
     booking=Uber_booking.find_one({"_id":bookingID})
     booking["status"]="confirmed"
     Uber_booking.update_one({"_id" : bookingID},
@@ -169,17 +169,27 @@ def doc():
 ### sign in/login
 @app.route('/user/signin', methods=['POST'])
 def login():
+    try:
+        request.json['username']
+        request.json['password']
+    except:
+        return jsonify("error input"), 400 
     user=verifyUser(request.json['username'],request.json['password'])  
     if user is None:
-        return jsonify("error input"), 400   
+        return jsonify("error input:password or username wrong"), 400   
     del user["password"]
     return jsonify(access_token=create_access_token(identity=user,fresh=timedelta(minutes=10)),refresh_token=create_refresh_token(identity=user)), 200
 ### sign up a user
 @app.route('/user/signup', methods=['POST'])
 def signup():
+    try:
+        request.json['username']
+        request.json['password']
+    except:
+        return jsonify("error input"), 400 
     user=createUser(request.json['username'],request.json['password'])     
     if user is None:
-        return jsonify("error input"), 400   
+        return jsonify("dulpicate user"), 400   
     del user["password"]
     return jsonify(access_token=create_access_token(identity=user,fresh=timedelta(minutes=10)),refresh_token=create_refresh_token(identity=user)), 200
 ### refresh token
@@ -203,6 +213,14 @@ def insertBus():
         return jsonify("error access"),401
     json=request.json
     try:
+        json["Departtime"]
+        json["Number"]
+        json["Depart"]
+        json["Arrive"]
+        json["BusType"]
+    except:
+        return jsonify("error input1"),400
+    try:
         bus=dict(Departtime=datetime.strptime(json["Departtime"],"%Y/%m/%d %H:%M"),Number=int(json["Number"]),Depart=json["Depart"],Arrive=json["Arrive"],_id=str(ObjectId()),BusType=json["BusType"])
         for key in bus:
             if key=="Departtime" or key=="Number":
@@ -214,7 +232,7 @@ def insertBus():
         insertBusToDB(bus)
         return jsonify(bus),200
     except Exception as e:
-        print(e)
+        # # print(e)
         return jsonify("error input"),400
 @app.route('/bus/searchbus',methods=["POST"])
 def searchbus():    
@@ -225,7 +243,7 @@ def searchbus():
             if StartTime.__ge__(EndTime):
                 return jsonify("error"),400
         except Exception as e:
-            print(e)
+            # print(e)
             EndTime=StartTime+timedelta(days=1)
         Depart=request.json["Depart"]
         Arrive=request.json["Arrive"]
@@ -234,7 +252,7 @@ def searchbus():
         except:
             Number=0
     except Exception as e:
-        print(e)
+        # print(e)
         return jsonify("error"),400
     # return jsonify(data=dict(StartTime=StartTime,EndTime=EndTime,Depart=Depart,Arrive=Arrive))
     busList=getBusLists(StartTime,EndTime,Depart,Arrive,Number)
@@ -242,23 +260,29 @@ def searchbus():
 @app.route('/booking/bookingexist',methods=["POST"])
 @jwt_required(fresh=True)
 def bookingExistBus():
-    busID=request.json["busID"]
-    user=dict(current_user)
-    Number=request.json["Number"]
-    contactinfo=request.json["contactinfo"]
-    status="confirmed"
-    if busID is None or Number is None or contactinfo is None or contactinfo["name"] is None or contactinfo["phone"] is None:
-        return jsonify("error input"),400
     try:
-        Number=int(Number)
+        busID=request.json["busID"]
+        user=dict(current_user)
+        Number=request.json["Number"]
+        contactinfo=request.json["contactinfo"]
+        status="confirmed"
+        if busID is None or Number is None or contactinfo is None or contactinfo["name"] is None or contactinfo["phone"] is None:
+            return jsonify("error input"),400
+        try:
+            Number=int(Number)
+        except:
+            return jsonify("error input"),400
+        return bookingProcess(busID,user,Number,contactinfo,status)
     except:
         return jsonify("error input"),400
-    return bookingProcess(busID,user,Number,contactinfo,status)
 @app.route('/booking/deletebooking',methods=["DELETE"])
 @jwt_required(fresh=True)
 def deleteBooking():
-    bookingID=request.json["bookingID"]
-    return deletebookingprocess(bookingID)
+    try:
+        bookingID=request.json["bookingID"]
+        return deletebookingprocess(bookingID)
+    except:
+        return jsonify("error"),400
 @app.route('/booking/getlist',methods=["GET"])
 @jwt_required(fresh=True)
 def getBookings():
@@ -267,39 +291,47 @@ def getBookings():
 @app.route('/booking/confirm',methods=["PUT"])
 @jwt_required(fresh=True)
 def confirmBooking():
-    user=dict(current_user)
-    if(user["userType"]!="admin"):
-        return jsonify(),401
-    bookingID=request.json["bookingID"]
-    if bookingID is None:
+    try:
+        user=dict(current_user)
+        if(user["userType"]!="admin"):
+            return jsonify(),401
+        bookingID=request.json["bookingID"]
+        if bookingID is None:
+            return jsonify("no id"),400
+        confirmBookingProcess(bookingID)
+        return jsonify(),204
+    except Exception as e:
+        print(e)
         return jsonify(),400
-    confirmBookingProcess(bookingID)
-    return jsonify(),204
 @app.route('/booking/createbooking',methods=["POST"])
 @jwt_required(fresh=True)
 def createBooking():
-    user=dict(current_user)
-    Number=request.json["Number"]
-    contactinfo=request.json["contactinfo"]
-    json=request.json
     try:
-        bus=dict(Departtime=datetime.strptime(json["Departtime"],"%Y/%m/%d %H:%M"),Number=int(json["Number"]),Depart=json["Depart"],Arrive=json["Arrive"],_id=str(ObjectId()),BusType="private")
-        for key in bus:
-            if key=="Departtime" or key=="Number":
-                continue
-            if len(bus[key]) == 0:
-                return jsonify("error input1"),400
-        
-        bus=getEstimateTime(bus)
-    except:
-        return jsonify("error input"),400
-    if Number is None or contactinfo is None or contactinfo["name"] is None or contactinfo["phone"] is None:
-        return jsonify("error input"),400
-    try:
-        Number=int(Number)
-    except:
-        return jsonify("error input"),400
-    return bookingProcess(bus,user,Number,contactinfo)
+        user=dict(current_user)
+        Number=request.json["Number"]
+        contactinfo=request.json["contactinfo"]
+        json=request.json
+        try:
+            bus=dict(Departtime=datetime.strptime(json["Departtime"],"%Y/%m/%d %H:%M"),Number=int(json["Number"]),Depart=json["Depart"],Arrive=json["Arrive"],_id=str(ObjectId()),BusType="private")
+            for key in bus:
+                if key=="Departtime" or key=="Number":
+                    continue
+                if len(bus[key]) == 0:
+                    return jsonify("error input1"),400
+            
+            bus=getEstimateTime(bus)
+        except:
+            return jsonify("error input2"),400
+        if Number is None or contactinfo is None or contactinfo["name"] is None or contactinfo["phone"] is None:
+            return jsonify("error input3"),400
+        try:
+            Number=int(Number)
+        except:
+            return jsonify("error input4"),400
+        return bookingProcess(bus,user,Number,contactinfo,"unconfirmed")
+    except Exception as e:
+        # print(e)
+        return jsonify("error input5"),400
 
 
 # interceptor
@@ -326,7 +358,7 @@ def interceptor():
 @app.before_first_request
 def before_first_request_func():
     if Uber_user.find_one({"userName":"admin"}) is None:
-        Uber_user.insert(dict(userName="admin",password=str(bcrypt.hashpw("admin".encode(),salt)),_id=str(ObjectId()),userType="admin"))
+        Uber_user.insert_one(dict(userName="admin",password=str(bcrypt.hashpw("admin".encode(),salt)),_id=str(ObjectId()),userType="admin"))
 
 
 

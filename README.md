@@ -71,3 +71,6 @@
 * http://apiurl/booking/deletebooking
 * * token required
 * * input json{bookingID}
+# Test
+* How to run test
+    `python -m unittest test`
