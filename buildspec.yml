@@ -2,7 +2,7 @@ version: 0.2
 
 env:
   variables:
-    AWS_REGION: "us-west-2"
+    AWS_REGION_2: "us-west-2"
     test_mongo: "localhost:5000"
 phases:
   install:
