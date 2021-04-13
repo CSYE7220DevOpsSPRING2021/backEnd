@@ -19,7 +19,7 @@ phases:
       - echo building prod images...
       - >
         docker build \
-          -f be/Dockerfile \
+          -f ./Dockerfile \
           -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/uber-be:prod \
           --build-arg mongoDBip="$test_mongo" \
           .
