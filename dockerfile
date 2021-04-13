@@ -7,3 +7,4 @@ ARG mongoDBip
 RUN python -m unittest test
 EXPOSE 5000
 CMD gunicorn --threads=3 --bind 0.0.0.0:5000 wsgi:app
+# 
