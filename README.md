@@ -1,6 +1,6 @@
 # docker
-`docker build -f ./dockerfile -t xxx .`
-`docker run -d -p 5000:5000 -e mongoDBip="remote mongo" majun1997/uber:test`
+`docker build -f ./dockerfile -t xxx --build-arg mongoDBip="remote test mongo" .`
+`docker run -d -p 5000:5000 -e mongoDBip="remote mongo" tag`
 # structure:
 1. User{
     _id,

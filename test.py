@@ -10,7 +10,8 @@ class Test(unittest.TestCase):
     # test init    
     def setUp(self):
         app.testing=True
-        self.client=app.test_client()           
+        self.client=app.test_client()       
+           
     # end test
     def tearDown(self):
         pass             
