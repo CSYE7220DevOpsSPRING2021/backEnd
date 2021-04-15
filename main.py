@@ -74,8 +74,9 @@ def createUser(username,password):
     except Exception as e:
         # print(e)
         return None
+# To be completed, google api not work in China(GFW)
 def getEstimateTime(bus):
-    bus["EstimateTime"]="3h"
+    bus["EstimateTime"]="3h" 
     return bus
 ## service
 ### 
