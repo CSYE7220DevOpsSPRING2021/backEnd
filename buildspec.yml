@@ -26,7 +26,7 @@ phases:
   post_build:
     commands:
     - echo pushing prod images to ecr...
-    - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/uber-be:prod
+    # - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/uber-be:prod
     - echo update k8s
     - kubectl get no
     - kubectl set image deployment flask-deployment flask=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/uber-be:prod
