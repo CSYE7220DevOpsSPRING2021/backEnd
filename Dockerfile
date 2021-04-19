@@ -3,7 +3,11 @@ WORKDIR /app
 ADD . .
 RUN apt-get update
 RUN pip3 install -r requirements.txt
-ARG mongoDBip
+# FROM localimg
+ARG test_mongo
+ENV mongoDBip=$test_mongo
 RUN python -m unittest test
 EXPOSE 5000
+ARG mongoDBip
+ENV mongoDBip=$mongoDBip
 CMD gunicorn --threads=3 --bind 0.0.0.0:5000 wsgi:app

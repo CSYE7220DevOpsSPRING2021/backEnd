@@ -10,8 +10,8 @@ phases:
       docker: 18
   pre_build:
     commands:
-      - 'env'
-      - '/usr/local/bin/entrypoint.sh'
+      - env
+      - /usr/local/bin/entrypoint.sh
       - echo logging in to ecr...
       - >
         aws ecr get-login-password --region $AWS_REGION \
@@ -23,12 +23,16 @@ phases:
       #   docker build \
       #     -f ./Dockerfile \
       #     -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/uber-be:prod \
-      #     --build-arg mongoDBip="$test_mongo" \
+      #     --build-arg test_mongo="$test_mongo" \
+      #     --build-arg mongoDBip="$mongoDBip" \
       #     .
+           
   post_build:
     commands:
     - echo pushing prod images to ecr...
     # - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/uber-be:prod
     - echo update k8s
     - kubectl get no
-    - kubectl set image deployment flask-deployment flask=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/uber-be:prod
+    - kubectl apply -f ./k8s/flask.yaml
+    # - kubectl 
+    # - kubectl set image deployment flask-deployment flask=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/uber-be:prod

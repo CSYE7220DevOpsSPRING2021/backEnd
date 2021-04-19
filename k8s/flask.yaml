@@ -36,3 +36,6 @@ spec:
             limits:
               memory: "500Mi"
               cpu: "0.25"
+          # env:
+          # - name: mongoDBip
+          #   value: "mongodb+srv://CSYE7220_MIDTERM:CSYE7220_MIDTERM@cluster0.lxsro.mongodb.net/Uber?retryWrites=true&w=majority"
