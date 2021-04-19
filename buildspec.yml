@@ -34,6 +34,8 @@ phases:
     - echo update k8s
     - echo $configmap >> configmap.yml
     - echo $kubeconfig >> $HOME/.kube/kubeconfig
+    - cat $HOME/.kube/kubeconfig
+    - cat configmap.yml
     - kubectl apply -f configmap.yml
     - kubectl get no
     # - kubectl apply -f ./k8s/flask.yaml
