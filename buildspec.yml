@@ -33,7 +33,7 @@ phases:
     # - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/uber-be:prod
     - echo update k8s
     - echo $configmap >> configmap.yml
-    - echo $kubeconfig >> $HOME/.kube/kubeconfig
+    # - echo $kubeconfig >> $HOME/.kube/kubeconfig
     - cat $HOME/.kube/kubeconfig
     - cat configmap.yml
     - kubectl apply -f configmap.yml
