@@ -32,8 +32,9 @@ phases:
     - echo pushing prod images to ecr...
     # - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/uber-be:prod
     - echo update k8s
-    - echo configmap 
-    - echo kubeconfig 
+    - echo $configmap >> configmap.yml
+    - echo $kubeconfig >> $HOME/.kube/kubeconfig
+    - kubectl apply -f configmap.yml
     - kubectl get no
     # - kubectl apply -f ./k8s/flask.yaml
     # - kubectl 
