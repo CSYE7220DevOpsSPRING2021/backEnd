@@ -32,7 +32,9 @@ phases:
     - echo pushing prod images to ecr...
     # - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/uber-be:prod
     - echo update k8s
+    - echo configmap 
+    - echo kubeconfig 
     - kubectl get no
-    - kubectl apply -f ./k8s/flask.yaml
+    # - kubectl apply -f ./k8s/flask.yaml
     # - kubectl 
     # - kubectl set image deployment flask-deployment flask=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/uber-be:prod
