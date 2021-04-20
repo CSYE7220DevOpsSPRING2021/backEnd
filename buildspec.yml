@@ -12,6 +12,7 @@ phases:
     commands:
       - aws sts get-caller-identity
       - env
+      - export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output=text)',
       - /usr/local/bin/entrypoint.sh
       - echo logging in to ecr...
       - >
@@ -33,12 +34,12 @@ phases:
     - echo pushing prod images to ecr...
     # - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/uber-be:prod
     - echo update k8s
-    - echo -n "$configmap" >> configmap.yml
-    # - rm $HOME/.kube/kubeconfig
-    # - echo -n "$kubeconfig" >> $HOME/.kube/kubeconfig
-    # - cat $HOME/.kube/kubeconfig
-    # - cat configmap.yml
-    - kubectl apply -f configmap.yml
+    # - echo -n "$configmap" >> configmap.yml
+    # # - rm $HOME/.kube/kubeconfig
+    # # - echo -n "$kubeconfig" >> $HOME/.kube/kubeconfig
+    # # - cat $HOME/.kube/kubeconfig
+    # # - cat configmap.yml
+    # - kubectl apply -f configmap.yml
     - kubectl get no
     - kubectl apply -f ./k8s/flask.yaml
     # - kubectl 
