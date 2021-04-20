@@ -150,9 +150,9 @@ class Test(unittest.TestCase):
         response = self.client.get("/booking/getlist",headers=header)
         data=json.loads(response.data)
         self.assertIn("confirmed",data)
-        self.assertEqual(1,len(data["unconfirmed"]))
-        self.assertIn("_id",data["unconfirmed"][0])
-        bookingID=data["unconfirmed"][0]["_id"]
+        self.assertEqual(1,len(data["confirmed"]))
+        self.assertIn("_id",data["confirmed"][0])
+        bookingID=data["confirmed"][0]["_id"]
         # confirm by admin
         ## admin sign in
         response = self.client.post("/user/signin",json={"username":"admin","password":"admin"})
