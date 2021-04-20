@@ -141,9 +141,9 @@ def deletebookingprocess(bookingID):
         mongosession.end_session()
 def getBookingList(user):
     # print(user)
-    confirmed=list(Uber_booking.find({"user_id":user["_id"],"status":"confirmed"}))
-    unconfirmed=list(Uber_booking.find({"user_id":user["_id"],"status":"unconfirmed"}))
-    return jsonify(dict(confirmed=confirmed,unconfirmed=unconfirmed))
+    booking=list(Uber_booking.find({"user_id":user["_id"]}))
+    
+    return jsonify(dict(confirmed=booking))
 def confirmBookingProcess(bookingID):
     booking=Uber_booking.find_one({"_id":bookingID})
     booking["status"]="confirmed"
