@@ -12,6 +12,7 @@ phases:
     commands:
       - aws sts get-caller-identity
       - env
+      - export TAG=${CODEBUILD_RESOLVED_SOURCE_VERSION}
       - export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output=text)
       - /usr/local/bin/entrypoint.sh
       - echo logging in to ecr...
@@ -24,7 +25,7 @@ phases:
       - >
         docker build \
           -f ./Dockerfile \
-          -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/uber-be:prod \
+          -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/uber-be:$TAG \
           --build-arg test_mongo="$test_mongo" \
           --build-arg mongoDBip="$mongoDBip" \
           .
@@ -32,7 +33,7 @@ phases:
   post_build:
     commands:
     - echo pushing prod images to ecr...
-    - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/uber-be:prod
+    - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/uber-be:$TAG
     - echo update k8s
     - echo -n "$configmap" >> configmap.yml
     - rm $HOME/.kube/kubeconfig
@@ -42,5 +43,5 @@ phases:
     - kubectl apply -f configmap.yml
     - kubectl get no
     - kubectl apply -f ./k8s/flask.yaml
-    - kubectl set image deployment flask-deployment flask=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/uber-be:prod
+    - kubectl set image deployment flask-deployment flask=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/uber-be:$TAG
     # kubectl set image deployment flask-deployment flask=997541697059.dkr.ecr.us-west-2.amazonaws.com/uber-be:prod
