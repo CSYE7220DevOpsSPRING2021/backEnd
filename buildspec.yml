@@ -43,3 +43,4 @@ phases:
     - kubectl get no
     - kubectl apply -f ./k8s/flask.yaml
     - kubectl set image deployment flask-deployment flask=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/uber-be:prod
+    # kubectl set image deployment flask-deployment flask=997541697059.dkr.ecr.us-west-2.amazonaws.com/uber-be:prod

@@ -27,7 +27,7 @@ import bcrypt
 ip="localhost:27017"
 if os.getenv("mongoDBip")!=None:
     ip=os.environ.get("mongoDBip",None)
-# # print(ip)
+print(ip)
 mongo_client = MongoClient(ip)
 db = mongo_client['Uber']
 Uber_bus = db['Uber']
