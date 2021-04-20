@@ -151,20 +151,6 @@ def confirmBookingProcess(bookingID):
                 {"$set": booking},
                 upsert=True)
 # route
-@app.route('/',methods=['GET'])
-def doc():
-    return """
-        POST:<BR/>
-        http://apiurl/user/signin<BR />
-        http://apiurl/user/signup<BR />
-        http://apiurl/user/refresh<BR />
-        http://apiurl/user/bus/insertbus<BR />
-        http://apiurl/user/bus/searchbus<BR />
-        http://apiurl//booking/bookingexist<BR />
-        GET:<BR/>
-        http://apiurl/user/getuser<BR />
-        http://apiurl/booking/getlist<BR />
-    """
 ## docs
 @app.route('/doc',methods=['GET'])
 def doc():
