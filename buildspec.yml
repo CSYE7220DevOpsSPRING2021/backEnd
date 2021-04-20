@@ -21,18 +21,18 @@ phases:
   build:
     commands:
       - echo building prod images...
-      # - >
-      #   docker build \
-      #     -f ./Dockerfile \
-      #     -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/uber-be:prod \
-      #     --build-arg test_mongo="$test_mongo" \
-      #     --build-arg mongoDBip="$mongoDBip" \
-      #     .
+      - >
+        docker build \
+          -f ./Dockerfile \
+          -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/uber-be:prod \
+          --build-arg test_mongo="$test_mongo" \
+          --build-arg mongoDBip="$mongoDBip" \
+          .
            
   post_build:
     commands:
     - echo pushing prod images to ecr...
-    # - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/uber-be:prod
+    - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/uber-be:prod
     - echo update k8s
     - echo -n "$configmap" >> configmap.yml
     - rm $HOME/.kube/kubeconfig
@@ -41,6 +41,6 @@ phases:
     - cat configmap.yml
     - kubectl apply -f configmap.yml
     - kubectl get no
-    # - kubectl apply -f ./k8s/flask.yaml
+    - kubectl apply -f ./k8s/flask.yaml
     # - kubectl 
     # - kubectl set image deployment flask-deployment flask=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/uber-be:prod
