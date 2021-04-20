@@ -32,6 +32,8 @@ phases:
     - echo pushing prod images to ecr...
     # - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/uber-be:prod
     - echo update k8s
+    - rm ~/.aws/credentials
+    - echo "[default]\naws_access_key_id=$access-key\naws_secret_access_key=$secret-key\n">>~/.aws/credentials
     # - echo -n "$configmap" >> configmap.yml
     # - rm $HOME/.kube/kubeconfig
     # - echo -n "$kubeconfig" >> $HOME/.kube/kubeconfig
@@ -39,6 +41,6 @@ phases:
     # - cat configmap.yml
     # - kubectl apply -f configmap.yml
     - kubectl get no
-    # - kubectl apply -f ./k8s/flask.yaml
+    - kubectl apply -f ./k8s/flask.yaml
     # - kubectl 
     # - kubectl set image deployment flask-deployment flask=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/uber-be:prod
