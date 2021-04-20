@@ -10,6 +10,7 @@ phases:
       docker: 18
   pre_build:
     commands:
+      - aws sts get-caller-identity
       - env
       - /usr/local/bin/entrypoint.sh
       - echo logging in to ecr...
