@@ -12,7 +12,7 @@ phases:
     commands:
       - aws sts get-caller-identity
       - env
-      - export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output=text)',
+      - export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output=text),
       - /usr/local/bin/entrypoint.sh
       - echo logging in to ecr...
       - >
