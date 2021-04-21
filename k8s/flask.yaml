@@ -36,3 +36,4 @@ spec:
             limits:
               memory: "500Mi"
               cpu: "0.25"
+      dnsPolicy: default
