@@ -1,4 +1,5 @@
-FROM python:3.9-slim-buster as base-img
+# FROM python:3.9-slim-buster as base-img
+FROM 997541697059.dkr.ecr.us-west-2.amazonaws.com/python:3.9-slim-buster   as base-img
 WORKDIR /app
 ADD . .
 RUN apt-get update
