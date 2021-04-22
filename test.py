@@ -96,14 +96,18 @@ class Test(unittest.TestCase):
         self.assertIn("200",response.status)
         data=json.loads(response.data)["data"]
         self.assertEqual(1,len(data))
-        self.assertIn("_id",data[0])        
+        self.assertIn("_id",data[0])  
+        # print(data[0])      
         # booking
         bus=dict(
             busID=data[0]["_id"],
             Number="20",
-            contactinfo={"name":"1","phone":"1"}
+            contactinfo={"name":"1","phone":"1"},
+            Depart=data[0]["Depart"],
+            Arrive=data[0]["Arrive"]
         )
         response = self.client.post("/booking/bookingexist",json=bus,headers=header)
+        # print(response.data)
         self.assertIn("201",response.status)
         response = self.client.post("/bus/searchbus",json=demobus)
         self.assertIn("200",response.status)

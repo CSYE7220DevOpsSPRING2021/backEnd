@@ -27,7 +27,7 @@ import bcrypt
 ip="localhost:27017"
 if os.getenv("mongoDBip")!=None:
     ip=os.environ.get("mongoDBip",None)
-# # print(ip)
+print(ip)
 mongo_client = MongoClient(ip)
 db = mongo_client['Uber']
 Uber_bus = db['Uber']
@@ -89,7 +89,7 @@ def getBusLists(StartTime,EndTime,Depart,Arrive,Number):
     # print(Number)
     return list(Uber_bus.find({"Depart":Depart,"Arrive":Arrive,"Departtime":{"$gte":StartTime,"$lte":EndTime},"Number":{"$gte":Number}}))
 #### simple transaction!
-def bookingProcess(busID,user,Number,contactinfo,Arrive,Depart,status):
+def bookingProcess(busID,user,Number,contactinfo,status):
     mongosession=mongo_client.start_session()
     mongosession.start_transaction()
     try:
@@ -105,7 +105,7 @@ def bookingProcess(busID,user,Number,contactinfo,Arrive,Depart,status):
             bus=busID
             insertBusToDB(bus)       
         # # print(bus)            
-        bd=dict(_id=str(ObjectId()),user_id=user["_id"],Arrive=Arrive,Depart=Depart,Number=Number,contactinfo=contactinfo,busID=bus["_id"],status=status)
+        bd=dict(_id=str(ObjectId()),user_id=user["_id"],Number=Number,contactinfo=contactinfo,busID=bus["_id"],status=status,Arrive=Arrive,Depart=Depart)
         Uber_booking.insert_one(bd)
         mongosession.commit_transaction()
         return jsonify(""),201
@@ -141,9 +141,9 @@ def deletebookingprocess(bookingID):
         mongosession.end_session()
 def getBookingList(user):
     # print(user)
-    confirmed=list(Uber_booking.find({"user_id":user["_id"]}))
-    #unconfirmed=list(Uber_booking.find({"user_id":user["_id"],"status":"unconfirmed"}))
-    return jsonify(dict(confirmed=confirmed))
+    booking=list(Uber_booking.find({"user_id":user["_id"]}))
+    
+    return jsonify(dict(confirmed=booking))
 def confirmBookingProcess(bookingID):
     booking=Uber_booking.find_one({"_id":bookingID})
     booking["status"]="confirmed"
@@ -266,20 +266,16 @@ def bookingExistBus():
         user=dict(current_user)
         Number=request.json["Number"]
         contactinfo=request.json["contactinfo"]
-        Depart=request.json["Depart"]
-        Arrive=request.json["Arrive"]
         status="confirmed"
         if busID is None or Number is None or contactinfo is None or contactinfo["name"] is None or contactinfo["phone"] is None:
-            return jsonify("error input1"),400
+            return jsonify("error input"),400
         try:
             Number=int(Number)
         except:
-            return jsonify("error input2"),400
-        print(type(busID))
-        return bookingProcess(busID,user,Number,contactinfo,Arrive,Depart,status)
-    except Exception as e:
-        print(e)
-        return jsonify("error input3"),400
+            return jsonify("error input"),400
+        return bookingProcess(busID,user,Number,contactinfo,status)
+    except:
+        return jsonify("error input"),400
 @app.route('/booking/deletebooking',methods=["DELETE"])
 @jwt_required(fresh=True)
 def deleteBooking():
@@ -333,7 +329,7 @@ def createBooking():
             Number=int(Number)
         except:
             return jsonify("error input4"),400
-        return bookingProcess(bus,user,Number,contactinfo,json["Arrive"],json["Depart"],"unconfirmed")
+        return bookingProcess(bus,user,Number,contactinfo,"unconfirmed")
     except Exception as e:
         # print(e)
         return jsonify("error input5"),400
