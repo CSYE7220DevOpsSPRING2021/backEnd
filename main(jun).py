@@ -105,7 +105,7 @@ def bookingProcess(busID,user,Number,contactinfo,status):
             bus=busID
             insertBusToDB(bus)       
         # # print(bus)            
-        bd=dict(_id=str(ObjectId()),user_id=user["_id"],Number=Number,contactinfo=contactinfo,busID=bus["_id"],status=status,Arrive=Arrive,Depart=Depart)
+        bd=dict(_id=str(ObjectId()),user_id=user["_id"],Number=Number,contactinfo=contactinfo,busID=bus["_id"],status=status)
         Uber_booking.insert_one(bd)
         mongosession.commit_transaction()
         return jsonify(""),201
